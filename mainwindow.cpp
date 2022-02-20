@@ -14,6 +14,10 @@ MainWindow::MainWindow(QWidget *parent)
     prepareData();
     updateFromChart();
     timer=new QTimer(this);
+    readWriteThread=0;
+    f=0;
+    m_com=new serialCom;
+
     connect(ui->radioButton,SIGNAL(clicked()),this,SLOT(setAixsSize()));
     connect(ui->radioButton_2,SIGNAL(clicked()),this,SLOT(setAixsSize()));
     connect(ui->radioButton_3,SIGNAL(clicked()),this,SLOT(setAixsSize()));
@@ -22,13 +26,23 @@ MainWindow::MainWindow(QWidget *parent)
     connect(curSeries, &QLineSeries::clicked, ui->chartView, &QChartViewPlus::keepCallout);
     connect(curSeries, &QLineSeries::hovered, ui->chartView, &QChartViewPlus::tooltip);
     connect(timer,SIGNAL(timeout()),this,SLOT(timeUpdate()));
+    connect(this,SIGNAL(openPort()),m_com,SLOT(openPort()));
+    connect(this,SIGNAL(closePort()),m_com,SLOT(closePort()));
+    //connect(readWriteThread,SIGNAL(started()),m_com,SLOT(init()));
+
     timer->start(1000);
+
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
     delete timer;
+    delete curSeries;
+    delete curAxis;
+    delete m_chart;
+    //delete readWriteThread;
+    m_com->deleteLater();
 }
 
 void MainWindow::createChart(){
@@ -90,8 +104,28 @@ void MainWindow::updateFromChart(){
 
 }
 
-void MainWindow::on_pushButton_clicked(bool checked)
+void MainWindow::on_pushButton_clicked()
 {
+    if(f==0){
+        f=new comSetDialog(m_com,this);
+        //f->setAttribute(Qt::WA_DeleteOnClose);
+        f->setWindowFlag(Qt::Window,true);
+        f->show();
+        connect(this,&MainWindow::printData,f,&comSetDialog::printTxt);
+        connect(f,&comSetDialog::beginConnect,this,&MainWindow::wrthread);
+        connect(f,&comSetDialog::closeConnect,this,&MainWindow::stopCom);
+        //connect(f,&comSetDialog::disConnect,this,&MainWindow::);
+
+//        readWriteThread=new QThread;
+//        m_com->moveToThread(readWriteThread);
+//        readWriteThread->start();
+//        connect(timer,SIGNAL(timeout()),m_com,SLOT(writeto()));
+//        connect(m_com,SIGNAL(read_data(QByteArray)),this,SLOT(recvFromS(QByteArray)));
+
+    }
+    else{
+        f->show();
+    }
 
 }
 
@@ -109,6 +143,42 @@ void MainWindow::timeUpdate()
     QString str=time.toString("yyyy-MM-dd hh:mm:ss dddd");
     ui->timeNow->setText(str);
 
+
+}
+
+void MainWindow::recvFromS(QByteArray b)
+{
+
+    emit printData(b);
+
+}
+
+void MainWindow::wrthread()
+{
+    if(readWriteThread==0){
+        readWriteThread=new QThread;
+        connect(m_com,SIGNAL(read_data(QByteArray)),this,SLOT(recvFromS(QByteArray)));
+        connect(readWriteThread,SIGNAL(started()),m_com,SLOT(init()));
+        connect(m_com,SIGNAL(destroyed()),readWriteThread,SLOT(quit()));
+        connect(readWriteThread,SIGNAL(finished()),readWriteThread,SLOT(deleteLater()));//子线程删除object->线程停止->线程对象销毁
+        m_com->moveToThread(readWriteThread);
+        readWriteThread->start();
+        emit openPort();
+    }
+    else{
+        emit openPort();
+    }
+
+}
+
+void MainWindow::stopCom()
+{
+    if(readWriteThread==0){
+
+    }
+    else{
+        emit closePort();
+    }
 }
 
 
@@ -132,4 +202,7 @@ void MainWindow::setAixsSize()
     axisX->setRange(0,maxi);
     //prepareData();
 }
+
+
+
 

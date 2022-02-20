@@ -11,6 +11,7 @@ CONFIG += c++11
 
 SOURCES += \
     callout.cpp \
+    comsetdialog.cpp \
     main.cpp \
     mainwindow.cpp \
     qchartviewplus.cpp \
@@ -18,11 +19,13 @@ SOURCES += \
 
 HEADERS += \
     callout.h \
+    comsetdialog.h \
     mainwindow.h \
     qchartviewplus.h \
     serialcom.h
 
 FORMS += \
+    comsetdialog.ui \
     mainwindow.ui
 
 # Default rules for deployment.
