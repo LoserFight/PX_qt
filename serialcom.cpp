@@ -3,6 +3,8 @@
 serialCom::serialCom(QObject *parent,int times)
     : QObject{parent}
 {
+    com_timer=0;
+    m_SerialPort=0;
     timeO=times;
     nameP="COM5";
     Brate=115200;
@@ -10,6 +12,7 @@ serialCom::serialCom(QObject *parent,int times)
     stopB=QSerialPort::OneStop;
     parity=QSerialPort::NoParity;
     contr=QSerialPort::HardwareControl;
+
 
 }
 
@@ -62,16 +65,21 @@ char serialCom::convertHexChar(char ch)
 
 void serialCom::init()
 {
-    m_SerialPort=new QSerialPort;
+    if(m_SerialPort==0){
+    m_SerialPort=new QSerialPort;}
+    if(com_timer==0){
     com_timer= new QTimer;
+    connect(m_SerialPort, SIGNAL(readyRead()),this, SLOT(read_recv()));
+    connect(com_timer,SIGNAL(timeout()),this,SLOT(writeto()));
+    }
+
     m_SerialPort->setPortName(nameP);
     m_SerialPort->setBaudRate(Brate);
     m_SerialPort->setDataBits(bitsS);
     m_SerialPort->setStopBits(stopB);
     m_SerialPort->setParity(parity);
     m_SerialPort->setFlowControl(contr);//the flow control used.
-    connect(m_SerialPort, SIGNAL(readyRead()),this, SLOT(read_recv()));
-    connect(com_timer,SIGNAL(timeout()),this,SLOT(writeto()));
+
 
 }
 

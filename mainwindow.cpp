@@ -124,6 +124,7 @@ void MainWindow::on_pushButton_clicked()
 
     }
     else{
+        f->findSerial();
         f->show();
     }
 
@@ -145,7 +146,7 @@ void MainWindow::timeUpdate()
 
 
 }
-
+//
 void MainWindow::recvFromS(QByteArray b)
 {
 
@@ -166,6 +167,7 @@ void MainWindow::wrthread()
         emit openPort();
     }
     else{
+        m_com->init();
         emit openPort();
     }
 

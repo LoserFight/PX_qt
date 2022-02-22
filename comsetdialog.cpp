@@ -17,9 +17,9 @@ comSetDialog::comSetDialog(serialCom *port, QWidget *parent):
     ui->setupUi(this);
     m_port=port;
     findSerial();
-    TimerCheck= new QTimer;
+    TimerCheck= new QTimer(this);
     connect(TimerCheck,SIGNAL(timeout()),this,SLOT(checkCOM()));
-    TimerCheck->start(5000);
+    //TimerCheck->start(5000);
 
 
 }
@@ -106,11 +106,12 @@ void comSetDialog::findSerial()
 void comSetDialog::printTxt(QByteArray tmp)
 {
     QString buff;
-    for(int i=0;i<tmp.count();i++){
-        QString s;
-        s.asprintf("0x%02x, ",(unsigned char)tmp.at(i));
-        buff+=s;
-    }
+//    for(int i=0;i<tmp.count();i++){
+//        QString s;
+//        s.asprintf("0x%02x, ",(unsigned char)tmp.at(i));
+//        buff+=s;
+//    }
+    buff=tmp.toHex();
     buff+="\n";
     //ui->textBrowser->setText(ui->textBrowser->document()->toPlainText()+buff);
     ui->textBrowser->textCursor().insertText(buff);
@@ -131,14 +132,14 @@ comSetDialog::~comSetDialog()
 void comSetDialog::on_connectBtn_clicked(bool checked)
 {
     if(checked){
-        TimerCheck->stop();
+        //TimerCheck->stop();
         ui->connectBtn->setText("disconnect");
         updatePort();
         emit beginConnect();
 
     }
     else{
-        TimerCheck->start(5000);
+        //TimerCheck->start(5000);
         ui->connectBtn->setText("connect");
         emit closeConnect();
     }
